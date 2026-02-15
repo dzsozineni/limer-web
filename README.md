@@ -63,9 +63,6 @@ A párosítás után minden működik, mint Android-on! 📱✅
 ### ✅ Működik:
 - **iOS 13.0+** (Bluefy böngésző) 📱 **ÚJ!**
 - **Android 6.0+** (Chrome/Edge/Opera) 📱 **AJÁNLOTT**
-- **Chrome OS**
-- **Windows 10+** (Bluetooth adapter kell)
-- **macOS 10.15+**
 
 ### ❌ Nem működik:
 - iOS Safari (nem támogatja Web Bluetooth API-t)
