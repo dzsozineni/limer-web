@@ -29,7 +29,7 @@ const screens = {
 
 const elements = {
   scanBtn: document.getElementById('scanBtn'),
-  refreshBtn: document.getElementById('refreshBtn'),
+  disconnectBtnX: document.getElementById('disconnectBtnX'),
   deviceList: document.getElementById('deviceList'),
   scanningIndicator: document.getElementById('scanningIndicator'),
   noDevicesMessage: document.getElementById('noDevicesMessage'),
@@ -38,7 +38,6 @@ const elements = {
   
   deviceName: document.getElementById('deviceName'),
   connectBtn: document.getElementById('connectBtn'),
-  disconnectBtn: document.getElementById('disconnectBtn'),
   lockControl: document.getElementById('lockControl'),
   lockBtn: document.getElementById('lockBtn'),
   lockStatus: document.getElementById('lockStatus'),
@@ -88,9 +87,8 @@ function init() {
 // Event Listeners
 function setupEventListeners() {
   elements.scanBtn.addEventListener('click', scanForDevices);
-  elements.refreshBtn.addEventListener('click', () => location.reload());
+  elements.disconnectBtnX.addEventListener('click', disconnectDevice);
   elements.connectBtn.addEventListener('click', connectToDevice);
-  elements.disconnectBtn.addEventListener('click', disconnectDevice);
   elements.lockBtn.addEventListener('click', toggleLock);
   elements.alarmBtn.addEventListener('click', () => sendCommand('alarm'));
   elements.lightBtn.addEventListener('click', toggleLight);
@@ -224,7 +222,7 @@ async function connectToDevice() {
     
     // Update UI
     elements.connectBtn.classList.add('hidden');
-    elements.disconnectBtn.classList.remove('hidden');
+    elements.disconnectBtnX.classList.add('visible');
     elements.lockControl.style.display = 'block';
     elements.secondaryControls.style.display = 'grid';
     elements.statusDisplay.style.display = 'grid';
@@ -276,18 +274,20 @@ async function disconnectDevice() {
     }
     
     resetConnection();
-    console.log('✅ Disconnected');
+    showScreen('deviceList'); // Go back to device list
+    console.log('✅ Sikeres lecsatlakozás');
     
   } catch (error) {
     console.error('❌ Disconnect error:', error);
     resetConnection();
+    showScreen('deviceList'); // Go back even on error
   }
 }
 
 function onDisconnected(event) {
-  console.log('⚠️ Device disconnected unexpectedly');
+  console.log('⚠️ Device disconnected');
   resetConnection();
-  alert('Az eszköz váratlanul lecsatlakozott!');
+  showScreen('deviceList'); // Quietly go back to device list
 }
 
 function resetConnection() {
@@ -301,7 +301,7 @@ function resetConnection() {
     <span class="material-symbols-outlined">link</span>
     Csatlakozás
   `;
-  elements.disconnectBtn.classList.add('hidden');
+  elements.disconnectBtnX.classList.remove('visible');
   elements.lockControl.style.display = 'none';
   elements.secondaryControls.style.display = 'none';
   elements.statusDisplay.style.display = 'none';
@@ -347,18 +347,18 @@ function updateUI() {
     elements.speedDisplay.style.display = 'none';
   }
   
-  // Light button
+  // Light button - FIXED: Show proper status and make it reactive
   if (currentStatus.light) {
     elements.lightBtn.classList.add('active');
     elements.lightBtn.innerHTML = `
       <span class="material-symbols-outlined">light_mode</span>
-      Lámpa (Be)
+      Lámpa BE
     `;
   } else {
     elements.lightBtn.classList.remove('active');
     elements.lightBtn.innerHTML = `
       <span class="material-symbols-outlined">light_mode</span>
-      Lámpa
+      Lámpa KI
     `;
   }
   
@@ -438,7 +438,7 @@ async function sendCommand(command) {
 
 // Toggle Lock
 async function toggleLock() {
-  const command = currentStatus.isUnlocked ? 'lock' : 'unlock';
+  const command = currentStatus.isUnlocked ? 'lock' : 'unlockforever'; // Changed to unlockforever
   
   // Add visual feedback
   elements.lockBtn.disabled = true;
