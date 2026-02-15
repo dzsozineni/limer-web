@@ -1,4 +1,4 @@
-# 🛴 Limer - iOS Compatible Web App
+# 🛴 Limer - Android/iOS Compatible Web App
 
 Modern Progressive Web Application (PWA) elektromos rollerek vezérlésére Bluetooth Low Energy (BLE) technológián keresztül - **iOS TÁMOGATÁSSAL!**
 
