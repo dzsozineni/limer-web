@@ -16,7 +16,7 @@ Ez a verzió **teljes mértékben támogatja az iOS-t** a **Bluefy** böngésző
 
 2️⃣ **Nyisd meg az appot Bluefy-ban**
    ```
-   https://yourusername.github.io/limer-web-ios/
+   https://dzsozineni.github.io/limer-web/
    ```
 
 3️⃣ **Első használatkor:**
@@ -58,32 +58,6 @@ A párosítás után minden működik, mint Android-on! 📱✅
 
 ---
 
-## 🚀 GitHub Pages Deploy
-
-### 1. Upload GitHub-ra
-```bash
-cd limer-web-ios
-git init
-git add .
-git commit -m "Initial commit: Limer iOS Compatible"
-git remote add origin https://github.com/USERNAME/limer-web-ios.git
-git push -u origin main
-```
-
-### 2. Enable GitHub Pages
-- Repo Settings → Pages
-- Source: **main branch** / **root**
-- Save
-
-### 3. Nyisd meg iOS-en!
-```
-https://USERNAME.github.io/limer-web-ios/
-```
-
-Bluefy böngészőben nyisd meg! 🍎
-
----
-
 ## 📋 Platform Támogatás
 
 ### ✅ Működik:
@@ -97,32 +71,6 @@ Bluefy böngészőben nyisd meg! 🍎
 - iOS Safari (nem támogatja Web Bluetooth API-t)
 - Firefox (még nincs Web Bluetooth)
 - Régi böngészők
-
----
-
-## 🔧 Helyi Tesztelés
-
-### iOS Szimulátor
-Sajnos nem működik iOS Simulator-ban, mert nincs BLE hardware! Használj **fizikai iOS eszközt**.
-
-### Lokális szerver (teszteléshez)
-```bash
-# Python
-python3 -m http.server 8000
-
-# Node.js
-npx http-server -p 8000
-```
-
-Nyisd meg: `http://localhost:8000` (Bluefy-ban iOS-en)
-
-### HTTPS teszteléshez
-```bash
-# ngrok
-ngrok http 8000
-```
-
-Vagy használd a GitHub Pages-t (automatikusan HTTPS)!
 
 ---
 
@@ -158,123 +106,6 @@ Vagy használd a GitHub Pages-t (automatikusan HTTPS)!
 
 #### "Connection timeout"
 → Reload az oldal + Roller restart
-
----
-
-## 🔐 BLE Protocol
-
-### Service UUID:
-```
-653bb0e0-1d85-46b0-9742-3b408f4cb83f
-```
-
-### Characteristic UUID:
-```
-00c1acd4-f35b-4b5f-868d-36e5668d0929
-```
-
-### Parancsok (UTF-8):
-| Parancs | Funkció |
-|---------|---------|
-| `unlock` | Feloldás |
-| `lock` | Zárolás |
-| `alarm` | Riasztó |
-| `lighton` | Lámpa be |
-| `lightoff` | Lámpa ki |
-
-### Notification (5 byte):
-```
-[0] Lock (0/1)
-[1] Reserved
-[2] Speed (km/h)
-[3] Battery (%)
-[4] Light (0/1)
-```
-
----
-
-## 🎨 Testreszabás
-
-### Színek (index.html)
-```css
-:root {
-  --primary-color: #0175C2;
-  --success-color: #4CAF50;
-  --danger-color: #f44336;
-}
-```
-
-### UUIDs (app-ios.js)
-```javascript
-const SERVICE_UUID = 'a-te-service-uuid';
-const CHAR_UUID = 'a-te-characteristic-uuid';
-```
-
----
-
-## 🔬 Technikai Részletek
-
-### iOS Compatibility Layer
-
-A kód automatikusan detektálja az iOS-t:
-```javascript
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-const isBluefy = /Bluefy/.test(navigator.userAgent);
-```
-
-És speciális iOS handling:
-- Natív párosítási dialog trigger
-- Security error handling
-- Enhanced logging iOS-re
-
-### Write Methods
-
-iOS-en automatikus fallback:
-```javascript
-if (characteristic.properties.writeWithoutResponse) {
-  await characteristic.writeValueWithoutResponse(data);
-} else {
-  await characteristic.writeValueWithResponse(data);
-}
-```
-
----
-
-## 🆘 Support
-
-### iOS Specific Issues:
-1. **Nézd meg a Bluefy docs-ot**: [Bluefy Help](https://github.com/pauliusuza/bluefy-ios)
-2. **Ellenőrizd az engedélyeket**: Settings → Privacy → Bluetooth
-3. **Nyisd meg GitHub Issue-t**: [Issues](https://github.com/username/limer-web-ios/issues)
-
-### Debug iOS-en:
-Bluefy-ban: Settings → Enable Remote Debugging
-Safari → Develop → [Device] → [Page]
-
----
-
-## 📦 Fájlstruktúra
-
-```
-limer-web-ios/
-├── index.html          # iOS-compatible UI
-├── app-ios.js          # iOS BLE logic + pairing
-├── manifest.json       # PWA manifest
-├── sw.js              # Service Worker
-├── favicon.png        # Icon
-├── icons/             # PWA icons
-├── .github/           # GitHub Actions
-└── README.md          # Ez a fájl
-```
-
----
-
-## 🙏 Köszönet
-
-- **Bluefy** - iOS Web Bluetooth support
-- **Web Bluetooth API** - Google Chrome Team
-- **Material Design** - Google
-- **AT-Limer sample** - Párosítás inspiráció
 
 ---
 
