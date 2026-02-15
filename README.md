@@ -1,0 +1,311 @@
+# 🛴 Limer - iOS Compatible Web App
+
+Modern Progressive Web Application (PWA) elektromos rollerek vezérlésére Bluetooth Low Energy (BLE) technológián keresztül - **iOS TÁMOGATÁSSAL!**
+
+## 🍎 iOS Támogatás
+
+### Bluefy Böngésző (Ajánlott iOS-en)
+
+Ez a verzió **teljes mértékben támogatja az iOS-t** a **Bluefy** böngésző segítségével!
+
+#### iOS Setup (3 lépés):
+
+1️⃣ **Telepítsd a Bluefy böngészőt**
+   - App Store: [Bluefy - Web BLE Browser](https://apps.apple.com/app/bluefy/id1492822055)
+   - Vagy keress rá: "Bluefy"
+
+2️⃣ **Nyisd meg az appot Bluefy-ban**
+   ```
+   https://yourusername.github.io/limer-web-ios/
+   ```
+
+3️⃣ **Első használatkor:**
+   - Kattints "Rollerek Keresése"
+   - **iOS felugró ablak jelenik meg** - "Bluetooth párosítás"
+   - **Válaszd ki a rollered** a listából
+   - Engedélyezd a párosítást
+   - Kész! 🎉
+
+### iOS Párosítás - Hogyan működik?
+
+A `navigator.bluetooth.requestDevice()` hívás során iOS automatikusan mutat egy natív párosítási dialogot. Ez a kulcs az iOS támogatáshoz!
+
+```javascript
+// Ez az iOS párosítási dialogot triggeli
+const device = await navigator.bluetooth.requestDevice({
+  filters: [{ services: [SERVICE_UUID] }],
+  optionalServices: [SERVICE_UUID]
+});
+// iOS-en itt történik a párosítás!
+```
+
+A párosítás után minden működik, mint Android-on! 📱✅
+
+---
+
+## ✨ Funkciók
+
+- 🔓 **Roller feloldás/zárolás** - egyszerű érintéssel
+- 💡 **Lámpa vezérlés** - LED be/kikapcsolás
+- 🔔 **Riasztó** - távolról
+- 📊 **Valós idejű telemetria**:
+  - Sebesség (km/h)
+  - Akkumulátor töltöttség
+  - Hatótáv becslés
+- 📱 **PWA támogatás** - telepíthető
+- 🌙 **Dark mode** - automatikus
+- 🍎 **iOS kompatibilis** - Bluefy-val
+
+---
+
+## 🚀 GitHub Pages Deploy
+
+### 1. Upload GitHub-ra
+```bash
+cd limer-web-ios
+git init
+git add .
+git commit -m "Initial commit: Limer iOS Compatible"
+git remote add origin https://github.com/USERNAME/limer-web-ios.git
+git push -u origin main
+```
+
+### 2. Enable GitHub Pages
+- Repo Settings → Pages
+- Source: **main branch** / **root**
+- Save
+
+### 3. Nyisd meg iOS-en!
+```
+https://USERNAME.github.io/limer-web-ios/
+```
+
+Bluefy böngészőben nyisd meg! 🍎
+
+---
+
+## 📋 Platform Támogatás
+
+### ✅ Működik:
+- **iOS 13.0+** (Bluefy böngésző) 📱 **ÚJ!**
+- **Android 6.0+** (Chrome/Edge/Opera) 📱 **AJÁNLOTT**
+- **Chrome OS**
+- **Windows 10+** (Bluetooth adapter kell)
+- **macOS 10.15+**
+
+### ❌ Nem működik:
+- iOS Safari (nem támogatja Web Bluetooth API-t)
+- Firefox (még nincs Web Bluetooth)
+- Régi böngészők
+
+---
+
+## 🔧 Helyi Tesztelés
+
+### iOS Szimulátor
+Sajnos nem működik iOS Simulator-ban, mert nincs BLE hardware! Használj **fizikai iOS eszközt**.
+
+### Lokális szerver (teszteléshez)
+```bash
+# Python
+python3 -m http.server 8000
+
+# Node.js
+npx http-server -p 8000
+```
+
+Nyisd meg: `http://localhost:8000` (Bluefy-ban iOS-en)
+
+### HTTPS teszteléshez
+```bash
+# ngrok
+ngrok http 8000
+```
+
+Vagy használd a GitHub Pages-t (automatikusan HTTPS)!
+
+---
+
+## 📱 iOS Használati Útmutató
+
+### Első csatlakozás iOS-en:
+
+1. **Nyisd meg Bluefy-ban** az app URL-jét
+2. **Kattints: "Rollerek Keresése"**
+3. **iOS dialog megjelenik:**
+   ```
+   "limer-web-ios" Would Like to
+   Connect to Bluetooth Devices
+   
+   [Roller neve]
+   [Másik eszköz]
+   
+   [Cancel] [Pair]
+   ```
+4. **Válaszd ki a rollered**
+5. **Tap "Pair"**
+6. **Csatlakozz** az appban
+7. **Használd!** 🎉
+
+### Gyakori iOS problémák:
+
+#### "Bluetooth párosítás ablak nem jelenik meg"
+→ Ellenőrizd: Settings → Privacy → Bluetooth → Bluefy (engedélyezve)
+
+#### "Pairing failed"
+→ Próbálkozz újra, esetleg törölj minden korábbi párosítást:
+   Settings → Bluetooth → [Roller] → Forget Device
+
+#### "Connection timeout"
+→ Reload az oldal + Roller restart
+
+---
+
+## 🔐 BLE Protocol
+
+### Service UUID:
+```
+653bb0e0-1d85-46b0-9742-3b408f4cb83f
+```
+
+### Characteristic UUID:
+```
+00c1acd4-f35b-4b5f-868d-36e5668d0929
+```
+
+### Parancsok (UTF-8):
+| Parancs | Funkció |
+|---------|---------|
+| `unlock` | Feloldás |
+| `lock` | Zárolás |
+| `alarm` | Riasztó |
+| `lighton` | Lámpa be |
+| `lightoff` | Lámpa ki |
+
+### Notification (5 byte):
+```
+[0] Lock (0/1)
+[1] Reserved
+[2] Speed (km/h)
+[3] Battery (%)
+[4] Light (0/1)
+```
+
+---
+
+## 🎨 Testreszabás
+
+### Színek (index.html)
+```css
+:root {
+  --primary-color: #0175C2;
+  --success-color: #4CAF50;
+  --danger-color: #f44336;
+}
+```
+
+### UUIDs (app-ios.js)
+```javascript
+const SERVICE_UUID = 'a-te-service-uuid';
+const CHAR_UUID = 'a-te-characteristic-uuid';
+```
+
+---
+
+## 🔬 Technikai Részletek
+
+### iOS Compatibility Layer
+
+A kód automatikusan detektálja az iOS-t:
+```javascript
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+const isBluefy = /Bluefy/.test(navigator.userAgent);
+```
+
+És speciális iOS handling:
+- Natív párosítási dialog trigger
+- Security error handling
+- Enhanced logging iOS-re
+
+### Write Methods
+
+iOS-en automatikus fallback:
+```javascript
+if (characteristic.properties.writeWithoutResponse) {
+  await characteristic.writeValueWithoutResponse(data);
+} else {
+  await characteristic.writeValueWithResponse(data);
+}
+```
+
+---
+
+## 🆘 Support
+
+### iOS Specific Issues:
+1. **Nézd meg a Bluefy docs-ot**: [Bluefy Help](https://github.com/pauliusuza/bluefy-ios)
+2. **Ellenőrizd az engedélyeket**: Settings → Privacy → Bluetooth
+3. **Nyisd meg GitHub Issue-t**: [Issues](https://github.com/username/limer-web-ios/issues)
+
+### Debug iOS-en:
+Bluefy-ban: Settings → Enable Remote Debugging
+Safari → Develop → [Device] → [Page]
+
+---
+
+## 📦 Fájlstruktúra
+
+```
+limer-web-ios/
+├── index.html          # iOS-compatible UI
+├── app-ios.js          # iOS BLE logic + pairing
+├── manifest.json       # PWA manifest
+├── sw.js              # Service Worker
+├── favicon.png        # Icon
+├── icons/             # PWA icons
+├── .github/           # GitHub Actions
+└── README.md          # Ez a fájl
+```
+
+---
+
+## 🙏 Köszönet
+
+- **Bluefy** - iOS Web Bluetooth support
+- **Web Bluetooth API** - Google Chrome Team
+- **Material Design** - Google
+- **AT-Limer sample** - Párosítás inspiráció
+
+---
+
+## 📄 Licenc
+
+MIT License - Használd szabadon!
+
+---
+
+## 🎊 Összefoglaló
+
+### Android:
+✅ Chrome/Edge/Opera → **Működik out-of-the-box**
+
+### iOS:
+✅ Bluefy böngésző → **Működik párosítás után!**
+
+### Desktop:
+✅ Chrome/Edge → **Működik Bluetooth adapter-rel**
+
+---
+
+**Made with 💚 for iOS and Android**
+
+```
+ _      _____ __  __ ______ _____  
+| |    |_   _|  \/  |  ____|  __ \ 
+| |      | | | \  / | |__  | |__) |
+| |      | | | |\/| |  __| |  _  / 
+| |____ _| |_| |  | | |____| | \ \ 
+|______|_____|_|  |_|______|_|  \_\
+                                    
+  iOS Compatible - Bluefy Ready! 🍎
+```
