@@ -312,8 +312,8 @@
       border-radius: 12px;
       padding: 20px;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
     }
 
     .status-item {
@@ -374,6 +374,39 @@
       color: var(--text-secondary);
     }
 
+    /* Compact speed display - always visible between name and lock */
+    .speed-display-compact {
+      text-align: center;
+      padding: 20px;
+      background: var(--surface);
+      border-radius: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+
+    .speed-value-compact {
+      font-size: 72px;
+      font-weight: 100;
+      line-height: 1;
+      transition: color 0.3s;
+      color: var(--text-primary);
+    }
+
+    .speed-value-compact.warning {
+      color: var(--warning-color);
+    }
+
+    .speed-value-compact.danger {
+      color: var(--danger-color);
+    }
+
+    .speed-unit-compact {
+      font-size: 24px;
+      font-weight: 300;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
     .loading {
       display: inline-block;
       width: 20px;
@@ -417,12 +450,12 @@
         padding: 12px;
       }
 
-      .speed-value {
-        font-size: 80px;
+      .status-display {
+        grid-template-columns: 1fr 1fr;
       }
 
-      .speed-unit {
-        font-size: 24px;
+      .status-item:nth-child(3) {
+        grid-column: 1 / -1;
       }
     }
   </style>
@@ -441,100 +474,102 @@
     <div id="notSupportedScreen" class="screen">
       <div class="status-message">
         <div class="icon">⚠️</div>
-        <h2>Web Bluetooth Nem Támogatott</h2>
-        <p>Ez a böngésző nem támogatja a Web Bluetooth API-t.</p>
-        <p style="margin-top: 16px;"><strong>iOS-en:</strong> Használd a <a href="https://apps.apple.com/app/bluefy/id1492822055" target="_blank" style="color: var(--primary-color);">Bluefy böngészőt</a></p>
-        <p style="margin-top: 8px;"><strong>Android-on:</strong> Használj Chrome, Edge vagy Opera böngészőt</p>
+        <h2>Web Bluetooth Not Supported</h2>
+        <p>This browser does not support the Web Bluetooth API.</p>
+        <p style="margin-top: 16px;"><strong>iOS:</strong> Use the <a href="https://apps.apple.com/app/bluefy/id1492822055" target="_blank" style="color: var(--primary-color);">Bluefy browser</a></p>
+        <p style="margin-top: 8px;"><strong>Android:</strong> Use Chrome, Edge or Opera</p>
       </div>
     </div>
 
     <!-- Device List Screen -->
     <div id="deviceListScreen" class="screen">
       <div class="alert alert-info" id="iosInfo" style="display:none;">
-        <strong>ℹ️ iOS Felhasználóknak:</strong><br>
-        Első csatlakozáskor engedélyezd a Bluetooth párosítást, amikor az iOS felugró ablak megjelenik!
+        <strong>ℹ️ iOS Users:</strong><br>
+        On first connect, allow Bluetooth pairing when the iOS popup appears!
       </div>
 
       <div class="alert alert-warning" id="httpsWarning" style="display:none;">
-        <strong>⚠️ Figyelem:</strong> A Web Bluetooth csak HTTPS kapcsolaton (vagy localhost-on) működik!
+        <strong>⚠️ Warning:</strong> Web Bluetooth requires HTTPS (or localhost).
       </div>
 
       <button class="btn" id="scanBtn">
         <span class="material-symbols-outlined">search</span>
-        Rollerek Keresése
+        Search for Scooters
       </button>
 
       <div id="scanningIndicator" class="status-message hidden">
         <div class="loading"></div>
-        <p style="margin-top: 16px;">Eszközök keresése...</p>
+        <p style="margin-top: 16px;">Searching for devices...</p>
       </div>
 
       <ul class="device-list" id="deviceList"></ul>
 
       <div id="noDevicesMessage" class="status-message hidden">
         <div class="icon">📡</div>
-        <h2>Nincs Találat</h2>
-        <p>Győződj meg róla, hogy a roller be van kapcsolva és közelben van.</p>
+        <h2>No Devices Found</h2>
+        <p>Make sure the scooter is powered on and nearby.</p>
       </div>
     </div>
 
     <!-- Control Screen -->
     <div id="controlScreen" class="screen">
       <div class="control-panel">
-        <!-- Connection Status -->
+
+        <!-- Connection card -->
         <div class="main-control">
           <p id="deviceName" style="margin-bottom: 16px; font-weight: 500;">-</p>
           <button class="btn" id="connectBtn">
             <span class="material-symbols-outlined">link</span>
-            Csatlakozás
+            Connect
           </button>
         </div>
 
-        <!-- Main Lock Control -->
+        <!-- Lock / Unlock -->
         <div class="main-control" id="lockControl" style="display:none;">
           <button class="lock-button locked" id="lockBtn">
             <span class="material-symbols-outlined">lock</span>
           </button>
-          <p style="margin-top: 16px; font-size: 14px; color: var(--text-secondary);">
-            <span id="lockStatus">Zárva</span>
+          <p style="margin-top: 12px; font-size: 14px; color: var(--text-secondary);">
+            <span id="lockStatus">Locked</span>
           </p>
         </div>
 
-        <!-- Secondary Controls -->
+        <!-- Alarm & Light -->
         <div class="secondary-controls" id="secondaryControls" style="display:none;">
           <button class="control-btn" id="alarmBtn">
             <span class="material-symbols-outlined">notifications</span>
-            Riasztó
+            Alarm
           </button>
           <button class="control-btn" id="lightBtn">
             <span class="material-symbols-outlined">light_mode</span>
-            Lámpa
+            Light OFF
           </button>
         </div>
 
-        <!-- Status Display -->
+        <!-- Battery & Range -->
         <div class="status-display" id="statusDisplay" style="display:none;">
           <div class="status-item">
             <span class="material-symbols-outlined status-icon" id="batteryIcon">battery_full</span>
             <div>
               <div class="status-value" id="batteryValue">--</div>
-              <div class="status-label">Töltöttség</div>
+              <div class="status-label">Battery</div>
             </div>
           </div>
           <div class="status-item">
             <span class="material-symbols-outlined status-icon">route</span>
             <div>
               <div class="status-value" id="rangeValue">--</div>
-              <div class="status-label">Hatótáv (km)</div>
+              <div class="status-label">Range (km)</div>
             </div>
           </div>
         </div>
 
-        <!-- Speed Display -->
+        <!-- Speed (only when unlocked) -->
         <div class="speed-display" id="speedDisplay" style="display:none;">
           <div class="speed-value" id="speedValue">0</div>
           <div class="speed-unit">km/h</div>
         </div>
+
       </div>
     </div>
   </div>

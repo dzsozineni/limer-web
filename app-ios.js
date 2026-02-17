@@ -1,7 +1,6 @@
 // Limer Web App - iOS Compatible with Bluefy
-// Service and Characteristic UUIDs
 const SERVICE_UUID = '653bb0e0-1d85-46b0-9742-3b408f4cb83f';
-const CHAR_UUID = '00c1acd4-f35b-4b5f-868d-36e5668d0929';
+const CHAR_UUID    = '00c1acd4-f35b-4b5f-868d-36e5668d0929';
 
 // App State
 let selectedDevice = null;
@@ -16,143 +15,114 @@ let currentStatus = {
   light: false
 };
 
-// Detect platform
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+// Platform detection
+const isIOS    = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const isBluefy = /Bluefy/.test(navigator.userAgent);
 
-// DOM Elements
+// DOM screens
 const screens = {
   notSupported: document.getElementById('notSupportedScreen'),
-  deviceList: document.getElementById('deviceListScreen'),
-  control: document.getElementById('controlScreen')
+  deviceList:   document.getElementById('deviceListScreen'),
+  control:      document.getElementById('controlScreen')
 };
 
-const elements = {
-  scanBtn: document.getElementById('scanBtn'),
-  disconnectBtnX: document.getElementById('disconnectBtnX'),
-  deviceList: document.getElementById('deviceList'),
-  scanningIndicator: document.getElementById('scanningIndicator'),
-  noDevicesMessage: document.getElementById('noDevicesMessage'),
-  httpsWarning: document.getElementById('httpsWarning'),
-  iosInfo: document.getElementById('iosInfo'),
-  
-  deviceName: document.getElementById('deviceName'),
-  connectBtn: document.getElementById('connectBtn'),
-  lockControl: document.getElementById('lockControl'),
-  lockBtn: document.getElementById('lockBtn'),
-  lockStatus: document.getElementById('lockStatus'),
-  
-  secondaryControls: document.getElementById('secondaryControls'),
-  alarmBtn: document.getElementById('alarmBtn'),
-  lightBtn: document.getElementById('lightBtn'),
-  
-  statusDisplay: document.getElementById('statusDisplay'),
-  speedDisplay: document.getElementById('speedDisplay'),
-  batteryIcon: document.getElementById('batteryIcon'),
-  batteryValue: document.getElementById('batteryValue'),
-  rangeValue: document.getElementById('rangeValue'),
-  speedValue: document.getElementById('speedValue')
+// DOM elements
+const el = {
+  scanBtn:            document.getElementById('scanBtn'),
+  disconnectBtnX:     document.getElementById('disconnectBtnX'),
+  deviceList:         document.getElementById('deviceList'),
+  scanningIndicator:  document.getElementById('scanningIndicator'),
+  noDevicesMessage:   document.getElementById('noDevicesMessage'),
+  httpsWarning:       document.getElementById('httpsWarning'),
+  iosInfo:            document.getElementById('iosInfo'),
+  deviceName:         document.getElementById('deviceName'),
+  connectBtn:         document.getElementById('connectBtn'),
+  lockControl:        document.getElementById('lockControl'),
+  lockBtn:            document.getElementById('lockBtn'),
+  lockStatus:         document.getElementById('lockStatus'),
+  secondaryControls:  document.getElementById('secondaryControls'),
+  alarmBtn:           document.getElementById('alarmBtn'),
+  lightBtn:           document.getElementById('lightBtn'),
+  statusDisplay:      document.getElementById('statusDisplay'),
+  batteryIcon:        document.getElementById('batteryIcon'),
+  batteryValue:       document.getElementById('batteryValue'),
+  rangeValue:         document.getElementById('rangeValue'),
+  speedDisplay:       document.getElementById('speedDisplay'),
+  speedValue:         document.getElementById('speedValue')
 };
 
-// Initialization
+// ── Init ──────────────────────────────────────────────────────────────────────
+
 function init() {
-  console.log('🚀 Limer Web App Initializing...');
-  console.log('Platform:', isIOS ? 'iOS' : 'Other', isBluefy ? '(Bluefy)' : '');
-  
-  // Check Web Bluetooth support
-  if (!navigator.bluetooth) {
-    console.error('❌ Web Bluetooth not supported');
-    showScreen('notSupported');
-    return;
-  }
-
-  // Show iOS info if on iOS
-  if (isIOS || isBluefy) {
-    elements.iosInfo.style.display = 'block';
-  }
-
-  // Check HTTPS
+  if (!navigator.bluetooth) { showScreen('notSupported'); return; }
+  if (isIOS || isBluefy) el.iosInfo.style.display = 'block';
   if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-    elements.httpsWarning.style.display = 'block';
+    el.httpsWarning.style.display = 'block';
   }
-
-  // Setup event listeners
-  setupEventListeners();
-  
-  // Show device list screen
+  setupListeners();
   showScreen('deviceList');
-  console.log('✅ App initialized');
 }
 
-// Event Listeners
-function setupEventListeners() {
-  elements.scanBtn.addEventListener('click', scanForDevices);
-  elements.disconnectBtnX.addEventListener('click', disconnectDevice);
-  elements.connectBtn.addEventListener('click', connectToDevice);
-  elements.lockBtn.addEventListener('click', toggleLock);
-  elements.alarmBtn.addEventListener('click', () => sendCommand('alarm'));
-  elements.lightBtn.addEventListener('click', toggleLight);
+// ── Listeners ─────────────────────────────────────────────────────────────────
+
+function setupListeners() {
+  el.scanBtn.addEventListener('click', scanForDevices);
+  el.disconnectBtnX.addEventListener('click', disconnectDevice);
+  el.connectBtn.addEventListener('click', connectToDevice);
+  el.lockBtn.addEventListener('click', toggleLock);
+  el.alarmBtn.addEventListener('click', () => sendCommand('alarm'));
+  el.lightBtn.addEventListener('click', toggleLight);
 }
 
-// Screen Management
-function showScreen(screenName) {
-  Object.values(screens).forEach(screen => screen.classList.remove('active'));
-  screens[screenName]?.classList.add('active');
+// ── Screen helpers ────────────────────────────────────────────────────────────
+
+function showScreen(name) {
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  if (screens[name]) screens[name].classList.add('active');
 }
 
-// Scan for Devices with iOS Pairing Support
+function showControlScreen() {
+  showScreen('control');
+  el.deviceName.textContent = selectedDevice?.name || 'Scooter';
+  el.connectBtn.classList.remove('hidden');
+  el.connectBtn.disabled = false;
+  el.connectBtn.innerHTML = '<span class="material-symbols-outlined">link</span> Connect';
+  el.disconnectBtnX.classList.remove('visible');
+  el.lockControl.style.display       = 'none';
+  el.secondaryControls.style.display = 'none';
+  el.statusDisplay.style.display     = 'none';
+  el.speedDisplay.style.display      = 'none';
+}
+
+// ── Scan ──────────────────────────────────────────────────────────────────────
+
 async function scanForDevices() {
-  console.log('🔍 Starting BLE scan...');
-  
   try {
-    elements.scanBtn.disabled = true;
-    elements.scanBtn.innerHTML = '<div class="loading"></div> Keresés...';
-    elements.scanningIndicator.classList.remove('hidden');
-    elements.noDevicesMessage.classList.add('hidden');
-    elements.deviceList.innerHTML = '';
-    
-    // CRITICAL FOR iOS: Request device will trigger iOS pairing dialog
-    // This is the key step that makes iOS work!
-    console.log('📱 Requesting device (iOS pairing dialog will appear)...');
-    
+    el.scanBtn.disabled = true;
+    el.scanBtn.innerHTML = '<div class="loading"></div> Scanning...';
+    el.scanningIndicator.classList.remove('hidden');
+    el.noDevicesMessage.classList.add('hidden');
+    el.deviceList.innerHTML = '';
+
     const device = await navigator.bluetooth.requestDevice({
       filters: [{ services: [SERVICE_UUID] }],
       optionalServices: [SERVICE_UUID]
     });
-    
-    console.log('✅ Device selected:', device.name);
-    console.log('Device ID:', device.id);
-    
-    // On iOS/Bluefy, the pairing happens automatically during requestDevice
-    if (isIOS || isBluefy) {
-      console.log('✅ iOS pairing completed');
-    }
-    
+
     selectedDevice = device;
-    
-    // Show device in list
     addDeviceToList(device);
-    
-    // Automatically show control screen
     showControlScreen();
-    
+
   } catch (error) {
-    console.error('❌ Scan error:', error);
-    
+    console.error('Scan error:', error.name, error.message);
     if (error.name === 'NotFoundError') {
-      elements.noDevicesMessage.classList.remove('hidden');
-    } else if (error.name === 'SecurityError') {
-      alert('iOS: Engedélyezd a Bluetooth hozzáférést a Beállításokban!');
-    } else {
-      alert(`Hiba a keresés során: ${error.message}`);
+      el.noDevicesMessage.classList.remove('hidden');
     }
+    // AbortError = user cancelled, don't show anything
   } finally {
-    elements.scanBtn.disabled = false;
-    elements.scanBtn.innerHTML = `
-      <span class="material-symbols-outlined">search</span>
-      Rollerek Keresése
-    `;
-    elements.scanningIndicator.classList.add('hidden');
+    el.scanBtn.disabled = false;
+    el.scanBtn.innerHTML = '<span class="material-symbols-outlined">search</span> Search for Scooters';
+    el.scanningIndicator.classList.add('hidden');
   }
 }
 
@@ -162,325 +132,181 @@ function addDeviceToList(device) {
   li.innerHTML = `
     <span class="material-symbols-outlined device-icon">electric_scooter</span>
     <div class="device-info">
-      <div class="device-name">${device.name || 'Névtelen Roller'}</div>
+      <div class="device-name">${device.name || 'Unknown Scooter'}</div>
       <div class="device-details">ID: ${device.id}</div>
-    </div>
-  `;
+    </div>`;
   li.onclick = showControlScreen;
-  elements.deviceList.appendChild(li);
+  el.deviceList.appendChild(li);
 }
 
-function showControlScreen() {
-  showScreen('control');
-  elements.deviceName.textContent = selectedDevice?.name || 'Roller';
-  elements.connectBtn.classList.remove('hidden');
-  elements.disconnectBtn.classList.add('hidden');
-}
+// ── Connect ───────────────────────────────────────────────────────────────────
 
-// Connect to Device (iOS Compatible)
 async function connectToDevice() {
-  if (!selectedDevice) {
-    alert('Nincs kiválasztott eszköz!');
-    return;
-  }
+  if (!selectedDevice) return;
 
-  console.log('🔗 Connecting to device...');
-  
   try {
-    elements.connectBtn.disabled = true;
-    elements.connectBtn.innerHTML = '<div class="loading"></div> Csatlakozás...';
-    
-    // Connect to GATT server
-    bluetoothDevice = selectedDevice;
-    
-    console.log('Connecting to GATT server...');
-    gattServer = await bluetoothDevice.gatt.connect();
-    console.log('✅ GATT server connected');
-    
-    // Get primary service
-    console.log('Getting service:', SERVICE_UUID);
-    const service = await gattServer.getPrimaryService(SERVICE_UUID);
-    console.log('✅ Service found');
-    
-    // Get characteristic
-    console.log('Getting characteristic:', CHAR_UUID);
+    el.connectBtn.disabled = true;
+    el.connectBtn.innerHTML = '<div class="loading"></div> Connecting...';
+
+    gattServer     = await selectedDevice.gatt.connect();
+    const service  = await gattServer.getPrimaryService(SERVICE_UUID);
     characteristic = await service.getCharacteristic(CHAR_UUID);
-    console.log('✅ Characteristic found');
-    console.log('Properties:', {
-      read: characteristic.properties.read,
-      write: characteristic.properties.write,
-      writeWithoutResponse: characteristic.properties.writeWithoutResponse,
-      notify: characteristic.properties.notify
-    });
-    
-    // Start notifications
+
     await characteristic.startNotifications();
     characteristic.addEventListener('characteristicvaluechanged', handleNotification);
-    console.log('✅ Notifications started');
-    
+    selectedDevice.addEventListener('gattserverdisconnected', onDisconnected);
+
     isConnected = true;
-    
-    // Update UI
-    elements.connectBtn.classList.add('hidden');
-    elements.disconnectBtnX.classList.add('visible');
-    elements.lockControl.style.display = 'block';
-    elements.secondaryControls.style.display = 'grid';
-    elements.statusDisplay.style.display = 'grid';
-    
-    console.log('✅ Connected successfully');
-    
-    // Setup disconnect handler
-    bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
-    
+
+    el.connectBtn.classList.add('hidden');
+    el.disconnectBtnX.classList.add('visible');
+    el.lockControl.style.display       = 'block';
+    el.secondaryControls.style.display = 'grid';
+    el.statusDisplay.style.display     = 'grid';
+
   } catch (error) {
-    console.error('❌ Connection error:', error);
-    console.error('Error details:', {
-      name: error.name,
-      message: error.message,
-      code: error.code
-    });
-    
-    let errorMsg = `Csatlakozási hiba: ${error.message}`;
-    
-    if (error.name === 'SecurityError') {
-      errorMsg = 'iOS: Engedélyezd a Bluetooth párosítást amikor felugrik!';
-    } else if (error.name === 'NetworkError') {
-      errorMsg = 'Hálózati hiba. Próbáld újra vagy indítsd újra a rollert.';
-    }
-    
-    alert(errorMsg);
+    console.error('Connection error:', error.name, error.message);
     isConnected = false;
-    
-    elements.connectBtn.disabled = false;
-    elements.connectBtn.innerHTML = `
-      <span class="material-symbols-outlined">link</span>
-      Csatlakozás
-    `;
+    el.connectBtn.disabled = false;
+    el.connectBtn.innerHTML = '<span class="material-symbols-outlined">link</span> Connect';
   }
 }
 
-// Disconnect Device
+// ── Disconnect ────────────────────────────────────────────────────────────────
+
 async function disconnectDevice() {
-  console.log('🔌 Disconnecting...');
-  
   try {
     if (characteristic) {
       await characteristic.stopNotifications();
       characteristic.removeEventListener('characteristicvaluechanged', handleNotification);
     }
-    
-    if (gattServer) {
-      gattServer.disconnect();
-    }
-    
+    if (gattServer) gattServer.disconnect();
+  } catch (e) {
+    console.error('Disconnect error:', e);
+  } finally {
     resetConnection();
-    showScreen('deviceList'); // Go back to device list
-    console.log('✅ Sikeres lecsatlakozás');
-    
-  } catch (error) {
-    console.error('❌ Disconnect error:', error);
-    resetConnection();
-    showScreen('deviceList'); // Go back even on error
+    showScreen('deviceList');
   }
 }
 
-function onDisconnected(event) {
-  console.log('⚠️ Device disconnected');
+function onDisconnected() {
   resetConnection();
-  showScreen('deviceList'); // Quietly go back to device list
+  showScreen('deviceList');
 }
 
 function resetConnection() {
-  isConnected = false;
+  isConnected    = false;
   characteristic = null;
-  gattServer = null;
-  
-  elements.connectBtn.classList.remove('hidden');
-  elements.connectBtn.disabled = false;
-  elements.connectBtn.innerHTML = `
-    <span class="material-symbols-outlined">link</span>
-    Csatlakozás
-  `;
-  elements.disconnectBtnX.classList.remove('visible');
-  elements.lockControl.style.display = 'none';
-  elements.secondaryControls.style.display = 'none';
-  elements.statusDisplay.style.display = 'none';
-  elements.speedDisplay.style.display = 'none';
+  gattServer     = null;
+
+  el.disconnectBtnX.classList.remove('visible');
+  el.connectBtn.classList.remove('hidden');
+  el.connectBtn.disabled = false;
+  el.connectBtn.innerHTML = '<span class="material-symbols-outlined">link</span> Connect';
+  el.lockControl.style.display       = 'none';
+  el.secondaryControls.style.display = 'none';
+  el.statusDisplay.style.display     = 'none';
+  el.speedDisplay.style.display      = 'none';
 }
 
-// Handle Notifications (Status Updates)
+// ── Notifications ─────────────────────────────────────────────────────────────
+
 function handleNotification(event) {
-  const value = event.target.value;
-  
-  // Parse 5-byte status packet
-  // Byte 0: Lock status (0=locked, 1=unlocked)
-  // Byte 1: Reserved
-  // Byte 2: Speed (km/h)
-  // Byte 3: Battery (0-100%)
-  // Byte 4: Light status (0=off, 1=on)
-  
-  if (value.byteLength >= 5) {
-    currentStatus.isUnlocked = value.getUint8(0) === 1;
-    currentStatus.speed = value.getUint8(2);
-    currentStatus.battery = value.getUint8(3);
-    currentStatus.light = value.getUint8(4) === 1;
-    
-    console.log('📊 Status update:', currentStatus);
-    
-    // Update UI
-    updateUI();
-  }
+  const v = event.target.value;
+  if (v.byteLength < 5) return;
+
+  currentStatus.isUnlocked = v.getUint8(0) === 1;
+  currentStatus.speed      = v.getUint8(2);
+  currentStatus.battery    = v.getUint8(3);
+  currentStatus.light      = v.getUint8(4) === 1;
+
+  updateUI();
 }
 
-// Update UI with Current Status
+// ── UI Update ─────────────────────────────────────────────────────────────────
+
 function updateUI() {
-  // Lock button
+  // Lock
   if (currentStatus.isUnlocked) {
-    elements.lockBtn.className = 'lock-button unlocked';
-    elements.lockBtn.innerHTML = '<span class="material-symbols-outlined">lock_open</span>';
-    elements.lockStatus.textContent = 'Feloldva';
-    elements.speedDisplay.style.display = 'block';
+    el.lockBtn.className = 'lock-button unlocked';
+    el.lockBtn.innerHTML = '<span class="material-symbols-outlined">lock_open</span>';
+    el.lockStatus.textContent = 'Unlocked';
+    el.speedDisplay.style.display = 'block';
   } else {
-    elements.lockBtn.className = 'lock-button locked';
-    elements.lockBtn.innerHTML = '<span class="material-symbols-outlined">lock</span>';
-    elements.lockStatus.textContent = 'Zárva';
-    elements.speedDisplay.style.display = 'none';
+    el.lockBtn.className = 'lock-button locked';
+    el.lockBtn.innerHTML = '<span class="material-symbols-outlined">lock</span>';
+    el.lockStatus.textContent = 'Locked';
+    el.speedDisplay.style.display = 'none';
   }
-  
-  // Light button - FIXED: Show proper status and make it reactive
+
+  // Light
   if (currentStatus.light) {
-    elements.lightBtn.classList.add('active');
-    elements.lightBtn.innerHTML = `
-      <span class="material-symbols-outlined">light_mode</span>
-      Lámpa BE
-    `;
+    el.lightBtn.classList.add('active');
+    el.lightBtn.innerHTML = '<span class="material-symbols-outlined">light_mode</span> Light ON';
   } else {
-    elements.lightBtn.classList.remove('active');
-    elements.lightBtn.innerHTML = `
-      <span class="material-symbols-outlined">light_mode</span>
-      Lámpa KI
-    `;
+    el.lightBtn.classList.remove('active');
+    el.lightBtn.innerHTML = '<span class="material-symbols-outlined">light_mode</span> Light OFF';
   }
-  
+
   // Battery
-  elements.batteryValue.textContent = `${currentStatus.battery}%`;
+  el.batteryValue.textContent = `${currentStatus.battery}%`;
   updateBatteryIcon(currentStatus.battery);
-  
-  // Range estimate
-  const range = (currentStatus.battery / 2.5).toFixed(1);
-  elements.rangeValue.textContent = `~${range}`;
-  
+  el.rangeValue.textContent = `~${(currentStatus.battery / 2.5).toFixed(1)}`;
+
   // Speed
-  elements.speedValue.textContent = currentStatus.speed;
-  
-  // Speed warning colors
-  elements.speedValue.classList.remove('warning', 'danger');
-  if (currentStatus.speed > 25) {
-    elements.speedValue.classList.add('danger');
-  } else if (currentStatus.speed > 20) {
-    elements.speedValue.classList.add('warning');
-  }
+  el.speedValue.textContent = currentStatus.speed;
+  el.speedValue.classList.remove('warning', 'danger');
+  if      (currentStatus.speed > 25) el.speedValue.classList.add('danger');
+  else if (currentStatus.speed > 20) el.speedValue.classList.add('warning');
 }
 
-function updateBatteryIcon(battery) {
-  const icon = elements.batteryIcon;
+function updateBatteryIcon(pct) {
+  const icon = el.batteryIcon;
   icon.classList.remove('battery-low', 'battery-medium', 'battery-high');
-  
-  if (battery < 10) {
-    icon.textContent = 'battery_0_bar';
-    icon.classList.add('battery-low');
-  } else if (battery < 25) {
-    icon.textContent = 'battery_2_bar';
-    icon.classList.add('battery-low');
-  } else if (battery < 50) {
-    icon.textContent = 'battery_3_bar';
-    icon.classList.add('battery-medium');
-  } else if (battery < 75) {
-    icon.textContent = 'battery_4_bar';
-    icon.classList.add('battery-medium');
-  } else if (battery < 90) {
-    icon.textContent = 'battery_5_bar';
-    icon.classList.add('battery-high');
-  } else {
-    icon.textContent = 'battery_full';
-    icon.classList.add('battery-high');
-  }
+  if      (pct < 10) { icon.textContent = 'battery_0_bar'; icon.classList.add('battery-low'); }
+  else if (pct < 25) { icon.textContent = 'battery_2_bar'; icon.classList.add('battery-low'); }
+  else if (pct < 50) { icon.textContent = 'battery_3_bar'; icon.classList.add('battery-medium'); }
+  else if (pct < 75) { icon.textContent = 'battery_4_bar'; icon.classList.add('battery-medium'); }
+  else if (pct < 90) { icon.textContent = 'battery_5_bar'; icon.classList.add('battery-high'); }
+  else               { icon.textContent = 'battery_full';  icon.classList.add('battery-high'); }
 }
 
-// Send Command to Device
-async function sendCommand(command) {
-  if (!isConnected || !characteristic) {
-    alert('Nincs csatlakozva az eszközhöz!');
-    return;
-  }
-  
-  console.log(`📤 Sending command: ${command}`);
-  
+// ── Commands ──────────────────────────────────────────────────────────────────
+
+async function sendCommand(cmd) {
+  if (!isConnected || !characteristic) return;
   try {
-    // Convert string to UTF-8 bytes
-    const encoder = new TextEncoder();
-    const data = encoder.encode(command);
-    
-    // Check if write with response is supported
+    const data = new TextEncoder().encode(cmd);
     if (characteristic.properties.writeWithoutResponse) {
       await characteristic.writeValueWithoutResponse(data);
-      console.log('✅ Command sent (without response)');
     } else {
       await characteristic.writeValueWithResponse(data);
-      console.log('✅ Command sent (with response)');
     }
-    
-  } catch (error) {
-    console.error('❌ Command error:', error);
-    alert(`Parancs küldési hiba: ${error.message}`);
+  } catch (e) {
+    console.error('Command error:', e);
   }
 }
 
-// Toggle Lock
 async function toggleLock() {
-  const command = currentStatus.isUnlocked ? 'lock' : 'unlockforever'; // Changed to unlockforever
-  
-  // Add visual feedback
-  elements.lockBtn.disabled = true;
-  
-  await sendCommand(command);
-  
-  // Re-enable after delay
-  setTimeout(() => {
-    elements.lockBtn.disabled = false;
-  }, 1000);
+  el.lockBtn.disabled = true;
+  await sendCommand(currentStatus.isUnlocked ? 'lock' : 'unlockforever');
+  setTimeout(() => { el.lockBtn.disabled = false; }, 1000);
 }
 
-// Toggle Light
 async function toggleLight() {
-  const command = currentStatus.light ? 'lightoff' : 'lighton';
-  await sendCommand(command);
+  await sendCommand(currentStatus.light ? 'lightoff' : 'lighton');
 }
 
-// Service Worker Registration (for PWA)
+// ── PWA ───────────────────────────────────────────────────────────────────────
+
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then(reg => console.log('✅ Service Worker registered'))
-      .catch(err => console.log('⚠️ Service Worker registration failed:', err));
-  });
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 
-// Initialize app when DOM is ready
+// ── Boot ──────────────────────────────────────────────────────────────────────
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
   init();
 }
-
-// Export for debugging
-window.LimerApp = {
-  currentStatus,
-  sendCommand,
-  connectToDevice,
-  disconnectDevice,
-  isIOS,
-  isBluefy
-};
-
-console.log('💚 Limer Web App loaded (iOS Compatible)');
