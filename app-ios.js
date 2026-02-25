@@ -215,10 +215,18 @@ function handleNotification(event) {
   const v = event.target.value;
   if (v.byteLength < 5) return;
 
+  const prevLight = currentStatus.light;
+
   currentStatus.isUnlocked = v.getUint8(0) === 1;
   currentStatus.speed      = v.getUint8(2);
   currentStatus.battery    = v.getUint8(3);
-  currentStatus.light      = v.getUint8(4) === 1;
+  const newLight           = v.getUint8(4) === 1;
+
+  // Only update light status if it changed from notification
+  // This prevents overwriting user's manual toggle
+  if (newLight !== prevLight) {
+    currentStatus.light = newLight;
+  }
 
   updateUI();
 }
@@ -239,7 +247,7 @@ function updateUI() {
     el.speedDisplay.style.display = 'none';
   }
 
-  // Light
+  // Light - always update based on currentStatus
   if (currentStatus.light) {
     el.lightBtn.classList.add('active');
     el.lightBtn.innerHTML = '<span class="material-symbols-outlined">light_mode</span> Light ON';
@@ -297,7 +305,7 @@ async function toggleLight() {
   // Toggle state immediately (optimistic update)
   currentStatus.light = !currentStatus.light;
   
-  // Update UI
+  // Update UI immediately
   if (currentStatus.light) {
     el.lightBtn.classList.add('active');
     el.lightBtn.innerHTML = '<span class="material-symbols-outlined">light_mode</span> Light ON';
