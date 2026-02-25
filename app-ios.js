@@ -294,7 +294,20 @@ async function toggleLock() {
 }
 
 async function toggleLight() {
-  await sendCommand(currentStatus.light ? 'lightoff' : 'lighton');
+  // Toggle state immediately (optimistic update)
+  currentStatus.light = !currentStatus.light;
+  
+  // Update UI
+  if (currentStatus.light) {
+    el.lightBtn.classList.add('active');
+    el.lightBtn.innerHTML = '<span class="material-symbols-outlined">light_mode</span> Light ON';
+  } else {
+    el.lightBtn.classList.remove('active');
+    el.lightBtn.innerHTML = '<span class="material-symbols-outlined">light_mode</span> Light OFF';
+  }
+  
+  // Send command
+  await sendCommand(currentStatus.light ? 'lighton' : 'lightoff');
 }
 
 // ── PWA ───────────────────────────────────────────────────────────────────────
