@@ -118,7 +118,6 @@ async function scanForDevices() {
     if (error.name === 'NotFoundError') {
       el.noDevicesMessage.classList.remove('hidden');
     }
-    // AbortError = user cancelled, don't show anything
   } finally {
     el.scanBtn.disabled = false;
     el.scanBtn.innerHTML = '<span class="material-symbols-outlined">search</span> Search for Scooters';
@@ -215,18 +214,11 @@ function handleNotification(event) {
   const v = event.target.value;
   if (v.byteLength < 5) return;
 
-  const prevLight = currentStatus.light;
-
   currentStatus.isUnlocked = v.getUint8(0) === 1;
   currentStatus.speed      = v.getUint8(2);
   currentStatus.battery    = v.getUint8(3);
-  const newLight           = v.getUint8(4) === 1;
-
-  // Only update light status if it changed from notification
-  // This prevents overwriting user's manual toggle
-  if (newLight !== prevLight) {
-    currentStatus.light = newLight;
-  }
+  // IMPORTANT: Do NOT read byte[4] for light status!
+  // The scooter doesn't send reliable light status, so we track it locally only
 
   updateUI();
 }
@@ -247,7 +239,7 @@ function updateUI() {
     el.speedDisplay.style.display = 'none';
   }
 
-  // Light - always update based on currentStatus
+  // Light - only updated by toggleLight(), NOT by notifications
   if (currentStatus.light) {
     el.lightBtn.classList.add('active');
     el.lightBtn.innerHTML = '<span class="material-symbols-outlined">light_mode</span> Light ON';
@@ -302,7 +294,7 @@ async function toggleLock() {
 }
 
 async function toggleLight() {
-  // Toggle state immediately (optimistic update)
+  // Toggle state locally (optimistic update)
   currentStatus.light = !currentStatus.light;
   
   // Update UI immediately
@@ -314,7 +306,7 @@ async function toggleLight() {
     el.lightBtn.innerHTML = '<span class="material-symbols-outlined">light_mode</span> Light OFF';
   }
   
-  // Send command
+  // Send command to scooter
   await sendCommand(currentStatus.light ? 'lighton' : 'lightoff');
 }
 
