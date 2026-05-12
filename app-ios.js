@@ -40,8 +40,6 @@ const el = {
   lockControl:        document.getElementById('lockControl'),
   lockBtn:            document.getElementById('lockBtn'),
   lockStatus:         document.getElementById('lockStatus'),
-  secondaryControls:  document.getElementById('secondaryControls'),
-  alarmBtn:           document.getElementById('alarmBtn'),
   lightBtn:           document.getElementById('lightBtn'),
   statusDisplay:      document.getElementById('statusDisplay'),
   batteryIcon:        document.getElementById('batteryIcon'),
@@ -70,7 +68,6 @@ function setupListeners() {
   el.disconnectBtnX.addEventListener('click', disconnectDevice);
   el.connectBtn.addEventListener('click', connectToDevice);
   el.lockBtn.addEventListener('click', toggleLock);
-  el.alarmBtn.addEventListener('click', () => sendCommand('alarm'));
   el.lightBtn.addEventListener('click', toggleLight);
 }
 
@@ -88,10 +85,10 @@ function showControlScreen() {
   el.connectBtn.disabled = false;
   el.connectBtn.innerHTML = '<span class="material-symbols-outlined">link</span> Connect';
   el.disconnectBtnX.classList.remove('visible');
-  el.lockControl.style.display       = 'none';
-  el.secondaryControls.style.display = 'none';
-  el.statusDisplay.style.display     = 'none';
-  el.speedDisplay.style.display      = 'none';
+  el.lockControl.style.display = 'none';
+  el.lightBtn.style.display    = 'none';
+  el.statusDisplay.style.display = 'none';
+  el.speedDisplay.style.display = 'none';
 }
 
 // ── Scan ──────────────────────────────────────────────────────────────────────
@@ -159,9 +156,9 @@ async function connectToDevice() {
 
     el.connectBtn.classList.add('hidden');
     el.disconnectBtnX.classList.add('visible');
-    el.lockControl.style.display       = 'block';
-    el.secondaryControls.style.display = 'grid';
-    el.statusDisplay.style.display     = 'grid';
+    el.lockControl.style.display   = 'block';
+    el.lightBtn.style.display      = 'block';
+    el.statusDisplay.style.display = 'grid';
 
   } catch (error) {
     console.error('Connection error:', error.name, error.message);
@@ -202,10 +199,10 @@ function resetConnection() {
   el.connectBtn.classList.remove('hidden');
   el.connectBtn.disabled = false;
   el.connectBtn.innerHTML = '<span class="material-symbols-outlined">link</span> Connect';
-  el.lockControl.style.display       = 'none';
-  el.secondaryControls.style.display = 'none';
-  el.statusDisplay.style.display     = 'none';
-  el.speedDisplay.style.display      = 'none';
+  el.lockControl.style.display   = 'none';
+  el.lightBtn.style.display      = 'none';
+  el.statusDisplay.style.display = 'none';
+  el.speedDisplay.style.display  = 'none';
 }
 
 // ── Notifications ─────────────────────────────────────────────────────────────
